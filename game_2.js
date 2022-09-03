@@ -4,8 +4,11 @@ const btnUp = document.querySelector("#up");
 const btnLeft = document.querySelector("#left");
 const btnRight = document.querySelector("#right");
 const btnDown = document.querySelector("#down");
-const spanLives = document.querySelector('#lives');
-const spantime = document.querySelector('#time');
+const spanLives = document.querySelector("#lives");
+const spantime = document.querySelector("#time");
+const spanRecord = document.querySelector("#record");
+const pResult = document.querySelector("#result");
+
 let level = 0;
 let lives = 3;
 let timeStart;
@@ -21,34 +24,41 @@ window.addEventListener("load", setCanvasSize);
 window.addEventListener("resize", setCanvasSize);
 function setCanvasSize() {
   if (window.innerHeight > window.innerWidth) {
-    canvasSize = window.innerWidth * 0.8;
+    canvasSize = window.innerWidth * 0.7;
   } else {
-    canvasSize = window.innerHeight * 0.8;
+    canvasSize = window.innerHeight * 0.7;
   }
+  canvasSize = Number(canvasSize.toFixed(0));
+
   canvas.setAttribute("width", canvasSize);
   canvas.setAttribute("height", canvasSize);
   elementsSize = canvasSize / 10;
+  elementsSize = Number(elementsSize.toFixed(0));
+  playerPosition.x = undefined;
+  playerPosition.y = undefined;
   startGame();
 }
 function startGame() {
-  //   console.log({ canvasSize, elementsSize });
+ 
   game.font = elementsSize + "px Verdana";
   game.textAlign = "end";
   const map = maps[level];
-  if (!timeStart){
+  if (!timeStart) {
     timeStart = Date.now();
-    timerInterval = setInterval(showTime,100);
+    timerInterval = setInterval(showTime, 100);
+    showRecord();
   }
 
-if (!map){
-  gameWin();
-  return;
-}
+  if (!map) {
+    gameWin();
+    return;
+  }
 
   const mapRows = map.trim().split("\n");
   const mapRowCols = mapRows.map((row) => row.trim().split(""));
-  //   console.log({ map, mapRows, mapRowCols });
-showLives();
+
+  showLives();
+
   game.clearRect(0, 0, canvasSize, canvasSize);
   enemyPosition = [];
   mapRowCols.forEach((row, rowI) => {
@@ -61,7 +71,7 @@ showLives();
         if (!playerPosition.x && !playerPosition.y) {
           playerPosition.x = posX;
           playerPosition.y = posY;
-          //   console.log({ playerPosition });
+       
         }
       } else if (col == "I") {
         giftPosition.x = posX;
@@ -81,27 +91,27 @@ showLives();
 }
 
 function movePlayer() {
-  const giftColisionX = playerPosition.x.toFixed(2) == giftPosition.x.toFixed(2);
+  const giftColisionX =
+    playerPosition.x.toFixed(2) == giftPosition.x.toFixed(2);
 
-  const giftColisionY = playerPosition.y.toFixed(2) == giftPosition.y.toFixed(2);
+  const giftColisionY =
+    playerPosition.y.toFixed(2) == giftPosition.y.toFixed(2);
 
   const giftCollision = giftColisionX && giftColisionY;
 
   if (giftCollision) {
     levelWin();
-   
   }
 
   const enemyCollision = enemyPosition.find((enemy) => {
     const enemyCollisionX = enemy.x.toFixed(0) == playerPosition.x.toFixed(0);
     const enemyCollisionY = enemy.y.toFixed(0) == playerPosition.y.toFixed(0);
-    console.log(enemyCollisionX && enemyCollisionY);
+
     return enemyCollisionX && enemyCollisionY;
   });
 
   if (enemyCollision) {
     levelFail();
-    
   }
 
   game.fillText(emojis["PLAYER"], playerPosition.x, playerPosition.y);
@@ -117,52 +127,60 @@ function moveByKeys(event) {
   else if (event.key == "ArrowRight") moveRight();
   else if (event.key == "ArrowDown") moveDown();
 }
-function levelWin(){
+function levelWin() {
   console.log("subiste de nivel");
   level++;
   startGame();
-  
 }
-function gameWin(){
-  console.log('Termino el juego!')
-  localStorage.setItem('record',"12314");
-  console.log(localStorage.getItem('record'))
+function gameWin() {
+  console.log("Termino el juego!");
+
 
   clearInterval(timerInterval);
+  const recorTime = localStorage.getItem("record_time");
+  const playerTime = Date.now() - timeStart;
+  if (recorTime) {
+    if (recorTime >= playerTime) {
+      localStorage.setItem("record_time", playerTime);
+      pResult.innerHTML = "SUPERASTE EL RECORD";
+    } else {
+      pResult.innerHTML = "Lo siento, no superaste el Record :(";
+    }
+  } else {
+    localStorage.setItem("record_time", playerTime);
+    pResult.innerHTML = "Primera vez, Intentalo de nuevo(";
+  }
+  console.log({ recorTime, playerTime });
 }
 
-function showLives(){
- const heartArray =  Array(lives).fill(emojis['HEART']);
-spanLives.innerHTML=" "
- heartArray.forEach(heart => spanLives.append(heart));
-
+function showLives() {
+  const heartArray = Array(lives).fill(emojis["HEART"]);
+  spanLives.innerHTML = " ";
+  heartArray.forEach((heart) => spanLives.append(heart));
 }
-function showTime(){
-  spantime.innerHTML = (Date.now() - timeStart);
-  
+function showTime() {
 
- 
+  spantime.innerHTML = Date.now() - timeStart;
 }
-function levelFail(){
+function showRecord() {
+  spanRecord.innerHTML = localStorage.getItem("record_time");
+}
+
+function levelFail() {
   lives--;
-  if (lives <= 0){
+  if (lives <= 0) {
     level = 0;
     lives = 3;
     timeStart = undefined;
   }
- 
 
   playerPosition.x = undefined;
   playerPosition.y = undefined;
- 
+
   startGame();
-
-
-  
-
 }
 function moveUp() {
-  //   console.log("Me quiero mover hacia arriba");
+
 
   if (playerPosition.y > elementsSize) {
     playerPosition.y -= elementsSize;
@@ -171,7 +189,7 @@ function moveUp() {
   }
 }
 function moveLeft() {
-  //   console.log("Me quiero mover hacia izquierda");
+
 
   if (playerPosition.x > elementsSize) {
     playerPosition.x -= elementsSize;
@@ -179,7 +197,7 @@ function moveLeft() {
   }
 }
 function moveRight() {
-  //   console.log("Me quiero mover hacia derecha");
+
 
   if (playerPosition.x < canvasSize) {
     playerPosition.x += elementsSize;
@@ -188,7 +206,7 @@ function moveRight() {
   }
 }
 function moveDown() {
-  //   console.log("Me quiero mover hacia abajo");
+
 
   if (playerPosition.y < canvasSize) {
     playerPosition.y += elementsSize;
